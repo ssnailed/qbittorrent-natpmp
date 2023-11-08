@@ -16,10 +16,10 @@ RUN apt-get update && \
 
 FROM ubuntu:jammy
 
-LABEL org.opencontainers.image.source="https://github.com/soxfor/qbittorrent-natmap"
+LABEL org.opencontainers.image.source="https://github.com/ssnailed/qbittorrent-natpmp"
 LABEL org.opencontainers.image.base.name="ubuntu:jammy"
 LABEL description="Map port via NAT-PMP and update qBittorrent configuration"
-LABEL version="1.1.0"
+LABEL version="2.0.0"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -47,13 +47,8 @@ RUN sed -i "/${LANG}/s/^# //g" /etc/locale.gen && \
 
 ENV QBITTORRENT_SERVER=localhost
 ENV QBITTORRENT_PORT=8080
-ENV QBITTORRENT_USER=admin
-ENV QBITTORRENT_PASS=adminadmin
-ENV VPN_GATEWAY=
-ENV VPN_CT_NAME=gluetun
-ENV VPN_IF_NAME=tun0
-ENV CHECK_INTERVAL=300
-ENV NAT_LEASE_LIFETIME=300
+ENV CHECK_INTERVAL=45
+ENV NAT_LEASE_LIFETIME=60
 
 COPY --from=docker-cli /usr/bin/docker /usr/bin/docker
 COPY data/start.sh /start.sh
