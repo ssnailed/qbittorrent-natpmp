@@ -43,27 +43,6 @@ qbt_isreachable() {
 	nc -4 -vw 5 ${QBITTORRENT_SERVER} ${QBITTORRENT_PORT} &>/dev/null 2>&1
 }
 
-fw_delrule() {
-	if (docker exec "${VPN_CT_NAME}" /sbin/iptables -L INPUT -n | grep -qP "^ACCEPT.*${configured_port}.*"); then
-		# shellcheck disable=SC2086
-		docker exec "${VPN_CT_NAME}" /sbin/iptables -D INPUT -i "${VPN_IF_NAME}" -p tcp --dport ${configured_port} -j ACCEPT
-		# shellcheck disable=SC2086
-		docker exec "${VPN_CT_NAME}" /sbin/iptables -D INPUT -i "${VPN_IF_NAME}" -p udp --dport ${configured_port} -j ACCEPT
-	fi
-}
-
-fw_addrule() {
-	if ! (docker exec "${VPN_CT_NAME}" /sbin/iptables -L INPUT -n | grep -qP "^ACCEPT.*${active_port}.*"); then
-		# shellcheck disable=SC2086
-		docker exec "${VPN_CT_NAME}" /sbin/iptables -A INPUT -i "${VPN_IF_NAME}" -p tcp --dport ${active_port} -j ACCEPT
-		# shellcheck disable=SC2086
-		docker exec "${VPN_CT_NAME}" /sbin/iptables -A INPUT -i "${VPN_IF_NAME}" -p udp --dport ${active_port} -j ACCEPT
-		return 0
-	else
-		return 1
-	fi
-}
-
 get_portmap() {
 	res=0
 	public_ip=$(getpublicip)
@@ -88,9 +67,6 @@ get_portmap() {
 	# shellcheck disable=SC2086
 	if [ ${configured_port} != ${active_port} ]; then
 		if qbt_changeport "${qbt_sid}" ${active_port}; then
-			if fw_delrule; then
-				echo "$(timestamp) | IPTables rule deleted for port ${configured_port} on ${VPN_CT_NAME} container"
-			fi
 			echo "$(timestamp) | Port Changed to: $(findconfiguredport ${qbt_sid})"
 		else
 			echo "$(timestamp) | Port Change failed."
@@ -98,10 +74,6 @@ get_portmap() {
 		fi
 	else
 		echo "$(timestamp) | Port OK (Act: ${active_port} Cfg: ${configured_port})"
-	fi
-
-	if fw_addrule; then
-		echo "$(timestamp) | IPTables rule added for port ${active_port} on ${VPN_CT_NAME} container"
 	fi
 
 	return $res
