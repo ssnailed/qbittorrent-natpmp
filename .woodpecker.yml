@@ -1,0 +1,15 @@
+when:
+  - event: manual
+  - event: push
+
+steps:
+  build:
+    image: plugins/kaniko
+    settings:
+      registry: git.snaile.de
+      auto_tag: true
+      cache: true
+      repo: git.snaile.de/snailed/qbittorrent-natpmp
+      username: kaniko
+      password:
+        from_secret: kaniko_push
